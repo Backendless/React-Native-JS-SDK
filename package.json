@@ -1,0 +1,33 @@
+{
+  "name": "backendless-react-native",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Backendless/React-Native-JS-SDK"
+  },
+  "bugs": {
+    "url": "http://support.backendless.com",
+    "email": "info@backendless.com"
+  },
+  "keywords": [
+    "cloud",
+    "mobile",
+    "api",
+    "baas",
+    "backendless.com",
+    "react-native"
+  ],
+  "author": "info@backendless.com",
+  "license": "ISC",
+  "peerDependencies": {
+    "react-native": "^0.41.2",
+    "react-native-windows": "0.41.0-rc.1",
+    "react-native-device-info": "^0.24.3",
+    "backendless": "^5.2.0"
+  }
+}
