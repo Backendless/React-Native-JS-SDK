@@ -1,4 +1,4 @@
-##Patch for using Backendless JS-SDK inside React Native App.
+## Patch for using Backendless JS-SDK inside React Native App.
 
 Actually Backendless JS-SDK is totally adapted for working in React Native applications, 
 you can use almost the entire Backendless API, 
@@ -8,7 +8,7 @@ __Additional Backendless features__:
 - Device setup inside `Backendless.appInit(...)`
 - Push Notification Templates
 
-###Push Notification Templates
+### Push Notification Templates
 
 #### Install base modules for Device Registration and for receiving Push Notifications
 - [react-native-device-info](https://www.npmjs.com/package/react-native-device-info)  
