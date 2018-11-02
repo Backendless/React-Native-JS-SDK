@@ -25,9 +25,8 @@
   "author": "info@backendless.com",
   "license": "ISC",
   "peerDependencies": {
-    "react-native": "^0.41.2",
-    "react-native-windows": "0.41.0-rc.1",
-    "react-native-device-info": "^0.24.3",
+    "react-native": ">0.41.2",
+    "react-native-device-info": ">0.24.3",
     "backendless": "^5.2.0"
   }
 }
