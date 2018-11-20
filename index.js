@@ -38,6 +38,23 @@ Backendless.Messaging.registerDevice = function (deviceToken, channels, expirati
     })
 };
 
+Backendless.Messaging.addPushNotificationListener = callback=>{
+  Emitter.addListener('notification', callback);
+};
+
+Backendless.Messaging.removePushNotificationListener = callback=>{
+  Emitter.removeListener('notification', callback);
+};
+
+Backendless.Messaging.addPushNotificationActionListener = callback=>{
+  Emitter.addListener('notificationAction', callback);
+};
+
+Backendless.Messaging.removePushNotificationActionListener = callback=>{
+  Emitter.removeListener('notificationAction', callback);
+};
+
+
 const RNBackendless = {
   NativeModule,
   Emitter,
