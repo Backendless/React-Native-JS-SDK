@@ -28,5 +28,10 @@
     "react-native": "^0.47.0",
     "react-native-device-info": "^0.24.3",
     "backendless": "^5.2.0"
+  },
+  "rnpm": {
+    "android": {
+      "packageInstance": "new RNBackendlessPackage()"
+    }
   }
 }
