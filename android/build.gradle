@@ -31,7 +31,6 @@ repositories {
 }
 
 dependencies {
-    compile project(':react-native-push-notification')
     compile 'com.facebook.react:react-native:+'
 }
   
