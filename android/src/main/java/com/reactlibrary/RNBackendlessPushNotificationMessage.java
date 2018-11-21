@@ -129,69 +129,123 @@ class RNBackendlessPushNotificationMessage {
     WritableMap toJSObject() {
         WritableMap jsObject = Arguments.createMap();
 
-        jsObject.putString("message", getMessage());
-        jsObject.putString("title", getTitle());
-        jsObject.putString("subtitle", getSubtitle());
-
-        jsObject.putInt("id", getId());
-        jsObject.putString("templateName", getTemplateName());
-
-        jsObject.putInt("badgeType", getBadge());
-        jsObject.putBoolean("showBadge", getShowBadge());
-        jsObject.putInt("badgeNumber", getBadgeNumber());
-
-        jsObject.putInt("priority", getPriority());
-
-        jsObject.putInt("colorCode", getColorCode());
-        jsObject.putInt("lightsColor", getLightsColor());
-
-        jsObject.putString("icon", getIcon());
-        jsObject.putString("largeIcon", getLargeIcon());
-        jsObject.putString("attachmentUrl", getAttachmentUrl());
-
-        jsObject.putString("sound", getSound());
-
-        WritableArray vibrateArray = Arguments.createArray();
-
-        for (long v : (long[]) getVibrate()) {
-            vibrateArray.pushDouble(v);
+        if (getMessage() != null) {
+            jsObject.putString("message", getMessage());
         }
 
-        jsObject.putArray("vibrate", vibrateArray);
-
-        jsObject.putBoolean("cancelOnTap", getCancelOnTap());
-        jsObject.putInt("cancelAfter", getCancelAfter());
-
-        WritableArray actionsArray = Arguments.createArray();
-
-        for (RNBackendlessPushNotificationAction v : getActions()) {
-            Bundle action = new Bundle();
-            action.putString("id", v.getId());
-            action.putString("title", v.getTitle());
-            action.putBoolean("inlineReplay", v.getOptions() == 1);
-
-            actionsArray.pushMap(Arguments.makeNativeMap(action));
+        if (getTitle() != null) {
+            jsObject.putString("title", getTitle());
         }
 
-        jsObject.putArray("actions", actionsArray);
-
-        WritableMap customHeadersMap = Arguments.createMap();
-
-        for (String key : customHeaders.keySet()) {
-            customHeadersMap.putString(key, customHeaders.get(key));
+        if (getSubtitle() != null) {
+            jsObject.putString("subtitle", getSubtitle());
         }
 
-        jsObject.putMap("customHeaders", customHeadersMap);
-        jsObject.putBoolean("contentAvailable", template.getContentAvailable() == 1);
+        if (getId() != null) {
+            jsObject.putInt("id", getId());
+        }
+
+        if (getTemplateName() != null) {
+            jsObject.putString("templateName", getTemplateName());
+        }
+
+        if (getBadge() != null) {
+            jsObject.putInt("badgeType", getBadge());
+        }
+
+        if (getShowBadge() != null) {
+            jsObject.putBoolean("showBadge", getShowBadge());
+        }
+
+        if (getBadgeNumber() != null) {
+            jsObject.putInt("badgeNumber", getBadgeNumber());
+        }
+
+        if (getPriority() != null) {
+            jsObject.putInt("priority", getPriority());
+        }
+
+        if (getColorCode() != null) {
+            jsObject.putInt("colorCode", getColorCode());
+        }
+
+        if (getLightsColor() != null) {
+            jsObject.putInt("lightsColor", getLightsColor());
+        }
+
+        if (getIcon() != null) {
+            jsObject.putString("icon", getIcon());
+        }
+
+        if (getLargeIcon() != null) {
+            jsObject.putString("largeIcon", getLargeIcon());
+        }
+
+        if (getAttachmentUrl() != null) {
+            jsObject.putString("attachmentUrl", getAttachmentUrl());
+        }
+
+        if (getSound() != null) {
+            jsObject.putString("sound", getSound());
+        }
+
+        if (getVibrate() != null) {
+            WritableArray vibrateArray = Arguments.createArray();
+
+            for (long v : getVibrate()) {
+                vibrateArray.pushDouble(v);
+            }
+
+            jsObject.putArray("vibrate", vibrateArray);
+        }
+
+        if (getCancelOnTap() != null) {
+            jsObject.putBoolean("cancelOnTap", getCancelOnTap());
+        }
+
+        if (getCancelAfter() != null) {
+            jsObject.putInt("cancelAfter", getCancelAfter());
+        }
+
+        if (getActions() != null) {
+            WritableArray actionsArray = Arguments.createArray();
+
+            for (RNBackendlessPushNotificationAction v : getActions()) {
+                Bundle action = new Bundle();
+                action.putString("id", v.getId());
+                action.putString("title", v.getTitle());
+                action.putBoolean("inlineReplay", v.getOptions() == 1);
+
+                actionsArray.pushMap(Arguments.makeNativeMap(action));
+            }
+
+            jsObject.putArray("actions", actionsArray);
+        }
+
+        if (customHeaders != null) {
+            WritableMap customHeadersMap = Arguments.createMap();
+
+            for (String key : customHeaders.keySet()) {
+                customHeadersMap.putString(key, customHeaders.get(key));
+            }
+
+            jsObject.putMap("customHeaders", customHeadersMap);
+        }
+
+        if (template.getContentAvailable() != null) {
+            jsObject.putBoolean("contentAvailable", template.getContentAvailable() == 1);
+        }
 
         return jsObject;
     }
 
-    public Bundle customHeadersToIntentBundle() {
+    Bundle customHeadersToIntentBundle() {
         Bundle intentBundle = new Bundle();
 
-        for (String key : customHeaders.keySet()) {
-            intentBundle.putString(key, customHeaders.get(key));
+        if (customHeaders != null) {
+            for (String key : customHeaders.keySet()) {
+                intentBundle.putString(key, customHeaders.get(key));
+            }
         }
 
         return intentBundle;

@@ -63,8 +63,9 @@ class RNBackendlessPushNotificationHelper {
             NotificationManager notificationManager = getNotificationService(appContext);
             List<NotificationChannel> notificationChannels = notificationManager.getNotificationChannels();
 
-            for (NotificationChannel notificationChannel : notificationChannels)
+            for (NotificationChannel notificationChannel : notificationChannels) {
                 notificationManager.deleteNotificationChannel(notificationChannel.getId());
+            }
         }
     }
 
@@ -267,8 +268,9 @@ class RNBackendlessPushNotificationHelper {
 
         if (attachmentUrl != null) {
             try {
-                InputStream is = (InputStream) new URL(attachmentUrl).getContent();
-                Bitmap bitmap = BitmapFactory.decodeStream(is);
+                URL url = new URL(attachmentUrl);
+                InputStream inputStream = (InputStream) url.getContent();
+                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
 
                 if (bitmap != null) {
                     notification.setStyle(new NotificationCompat.BigPictureStyle().bigPicture(bitmap));

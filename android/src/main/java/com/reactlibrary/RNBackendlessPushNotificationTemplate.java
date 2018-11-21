@@ -41,111 +41,109 @@ public class RNBackendlessPushNotificationTemplate {
 
     RNBackendlessPushNotificationTemplate(JSONObject jsonObject) {
 
-        if (jsonObject.has("name")) {
+        if (jsonObject.has("name") && !jsonObject.isNull("name")) {
             setName(jsonObject.optString("name"));
         }
 
-        if (jsonObject.has("contentTitle")) {
+        if (jsonObject.has("contentTitle") && !jsonObject.isNull("contentTitle")) {
             setContentTitle(jsonObject.optString("contentTitle"));
         }
 
-        if (jsonObject.has("summarySubText")) {
+        if (jsonObject.has("summarySubText") && !jsonObject.isNull("summarySubText")) {
             setSummarySubText(jsonObject.optString("summarySubText"));
         }
 
-        if (jsonObject.has("badgeNumber")) {
+        if (jsonObject.has("badgeNumber") && !jsonObject.isNull("badgeNumber")) {
             setBadgeNumber(jsonObject.optInt("badgeNumber"));
         }
 
-        if (jsonObject.has("priority")) {
+        if (jsonObject.has("priority") && !jsonObject.isNull("priority")) {
             setPriority(jsonObject.optInt("priority"));
         }
 
-        if (jsonObject.has("colorCode")) {
+        if (jsonObject.has("colorCode") && !jsonObject.isNull("colorCode")) {
             setColorCode(jsonObject.optInt("colorCode"));
         }
 
-        if (jsonObject.has("largeIcon")) {
+        if (jsonObject.has("largeIcon") && !jsonObject.isNull("largeIcon")) {
             setLargeIcon(jsonObject.optString("largeIcon"));
         }
 
-        if (jsonObject.has("icon")) {
+        if (jsonObject.has("icon") && !jsonObject.isNull("icon")) {
             setIcon(jsonObject.optString("icon"));
         }
 
-        if (jsonObject.has("badge")) {
+        if (jsonObject.has("badge") && !jsonObject.isNull("badge")) {
             setBadge(jsonObject.optInt("badge"));
         }
 
-        if (jsonObject.has("attachmentUrl")) {
+        if (jsonObject.has("attachmentUrl") && !jsonObject.isNull("attachmentUrl")) {
             setAttachmentUrl(jsonObject.optString("attachmentUrl"));
         }
 
-        if (jsonObject.has("showBadge")) {
+        if (jsonObject.has("showBadge") && !jsonObject.isNull("showBadge")) {
             setShowBadge(jsonObject.optBoolean("showBadge"));
         }
 
-        if (jsonObject.has("sound")) {
+        if (jsonObject.has("sound") && !jsonObject.isNull("sound")) {
             setSound(jsonObject.optString("sound"));
         }
 
-        if (jsonObject.has("cancelOnTap")) {
+        if (jsonObject.has("cancelOnTap") && !jsonObject.isNull("cancelOnTap")) {
             setCancelOnTap(jsonObject.optBoolean("cancelOnTap"));
         }
 
-        if (jsonObject.has("cancelAfter")) {
+        if (jsonObject.has("cancelAfter") && !jsonObject.isNull("cancelAfter")) {
             setCancelAfter(jsonObject.optInt("cancelAfter"));
         }
 
-        if (jsonObject.has("lightsColor")) {
+        if (jsonObject.has("lightsColor") && !jsonObject.isNull("lightsColor")) {
             setLightsColor(jsonObject.optInt("lightsColor"));
         }
 
-        if (jsonObject.has("contentAvailable")) {
+        if (jsonObject.has("contentAvailable") && !jsonObject.isNull("contentAvailable")) {
             setContentAvailable(jsonObject.optInt("contentAvailable"));
         }
 
-        if (jsonObject.has("vibrate")) {
+        if (jsonObject.has("vibrate") && !jsonObject.isNull("vibrate")) {
             JSONArray vibrateArray = jsonObject.optJSONArray("vibrate");
 
-            if (vibrateArray != null) {
-                long[] vibrate = new long[vibrateArray.length()];
+            long[] vibrate = new long[vibrateArray.length()];
 
-                for (int i = 0; i < vibrateArray.length(); i++) {
-                    vibrate[i] = vibrateArray.optLong(i);
-                }
-
-                setVibrate(vibrate);
+            for (int i = 0; i < vibrateArray.length(); i++) {
+                vibrate[i] = vibrateArray.optLong(i);
             }
+
+            setVibrate(vibrate);
         }
 
-        if (jsonObject.has("actions")) {
+        if (jsonObject.has("actions") && !jsonObject.isNull("actions")) {
             JSONArray actionsArray = jsonObject.optJSONArray("actions");
 
-            if (actionsArray != null) {
-                RNBackendlessPushNotificationAction[] actions = new RNBackendlessPushNotificationAction[actionsArray.length()];
+            RNBackendlessPushNotificationAction[] actions = new RNBackendlessPushNotificationAction[actionsArray.length()];
 
-                for (int i = 0; i < actionsArray.length(); i++) {
-                    actions[i] = new RNBackendlessPushNotificationAction(actionsArray.optJSONObject(i));
-                }
-
-                setActions(actions);
+            for (int i = 0; i < actionsArray.length(); i++) {
+                actions[i] = new RNBackendlessPushNotificationAction(actionsArray.optJSONObject(i));
             }
+
+            setActions(actions);
         }
 
-        if (jsonObject.has("customHeaders")) {
+        if (jsonObject.has("customHeaders") && !jsonObject.isNull("customHeaders")) {
             JSONObject customHeadersObject = jsonObject.optJSONObject("customHeaders");
 
             HashMap<String, String> customHeadersMap = new HashMap<>();
 
-            for (Iterator<String> it = customHeadersObject.keys(); it.hasNext(); ) {
-                String key = it.next();
-                String value = customHeadersObject.optString(key);
+            if (!customHeadersMap.isEmpty()) {
+                for (Iterator<String> it = customHeadersObject.keys(); it.hasNext(); ) {
+                    String key = it.next();
+                    String value = customHeadersObject.optString(key);
 
-                customHeadersMap.put(key, value);
+                    customHeadersMap.put(key, value);
+                }
+
+                setCustomHeaders(customHeadersMap);
             }
-
-            setCustomHeaders(customHeadersMap);
         }
     }
 
