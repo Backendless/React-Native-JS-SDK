@@ -38,40 +38,19 @@ Backendless.Messaging.registerDevice = function (deviceToken, channels, expirati
     })
 };
 
-Backendless.Messaging.addPushNotificationListener = callback=>{
+Backendless.Messaging.addPushNotificationListener = callback => {
   Emitter.addListener('notification', callback);
 };
 
-Backendless.Messaging.removePushNotificationListener = callback=>{
+Backendless.Messaging.removePushNotificationListener = callback => {
   Emitter.removeListener('notification', callback);
 };
 
-Backendless.Messaging.addPushNotificationActionListener = callback=>{
+Backendless.Messaging.addPushNotificationActionListener = callback => {
   Emitter.addListener('notificationAction', callback);
 };
 
-Backendless.Messaging.removePushNotificationActionListener = callback=>{
+Backendless.Messaging.removePushNotificationActionListener = callback => {
   Emitter.removeListener('notificationAction', callback);
 };
-
-
-const RNBackendless = {
-  NativeModule,
-  Emitter,
-
-  updatePushTemplates() {
-    return Backendless.Messaging.getPushTemplates()
-      .then(templates => {
-        console.log('templates', templates);
-
-        return NativeModule.setTemplates(templates).then(() => templates)
-      })
-  },
-
-  onPushNotificationActionResponse(callback) {
-    Emitter.addListener('didReceiveNotificationResponse', callback);
-  }
-};
-
-export default RNBackendless
 
