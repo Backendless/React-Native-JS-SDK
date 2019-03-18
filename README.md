@@ -28,7 +28,7 @@ react-native link
 
 #### Setup Native projects
 - [for iOS](./doc/ios/guide.md)
-- [for Android](./doc/ios/guide.md)
+- [for Android](./doc/android/guide.md)
 
 ## Usage
 
