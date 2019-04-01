@@ -8,7 +8,7 @@ const _initApp = Backendless.initApp;
 const _registerDevice = Backendless.Messaging.registerDevice;
 
 Backendless.initApp = function (appId, apiKey) {
-  RNBackendless.NativeModule.setAppId(appId);
+  NativeModule.setAppId(appId);
 
   return _initApp.apply(this, arguments)
 };
@@ -21,7 +21,7 @@ Backendless.Messaging.registerDevice = function (deviceToken, channels, expirati
   }
 
   return Promise.resolve()
-    .then(() => RNBackendless.NativeModule.getDeviceInfo())
+    .then(() => NativeModule.getDeviceInfo())
     .then(device => {
       Backendless.setupDevice({
         uuid    : device.uuid,
