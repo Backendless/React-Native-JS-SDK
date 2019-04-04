@@ -366,13 +366,24 @@ class RNBackendlessPushNotificationHelper {
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private NotificationChannel getOrCreateNotificationChannel(RNBackendlessPushNotificationMessage pushMessage) {
-        final String channelName = pushMessage.getTemplateName();
+        final String templateName = pushMessage.getTemplateName();
+
+        String channelName = templateName;
+
+        if (templateName == null) {
+            channelName = "Fallback";
+        }
+
         final String channelId = backendlessAppId + "-" + channelName;
 
         NotificationChannel notificationChannel = notificationManager.getNotificationChannel(channelId);
 
         if (notificationChannel == null) {
             notificationChannel = new NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_DEFAULT);
+
+            if (templateName == null) {
+                notificationChannel.setImportance(NotificationManager.IMPORTANCE_DEFAULT);
+            }
 
             setShowBadge(pushMessage, notificationChannel);
             setPriority(pushMessage, notificationChannel);
