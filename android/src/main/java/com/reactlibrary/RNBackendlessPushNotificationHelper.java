@@ -381,10 +381,6 @@ class RNBackendlessPushNotificationHelper {
         if (notificationChannel == null) {
             notificationChannel = new NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_DEFAULT);
 
-            if (templateName == null) {
-                notificationChannel.setImportance(NotificationManager.IMPORTANCE_DEFAULT);
-            }
-
             setShowBadge(pushMessage, notificationChannel);
             setPriority(pushMessage, notificationChannel);
             setSound(pushMessage, notificationChannel);
