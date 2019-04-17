@@ -1,6 +1,6 @@
 {
   "name": "backendless-react-native",
-  "version": "0.0.16",
+  "version": "0.0.16-next.6",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -26,7 +26,7 @@
   "license": "ISC",
   "peerDependencies": {
     "react-native": "^0.47.0",
-    "backendless": "^5.2.0"
+    "backendless": ">=5.2.10"
   },
   "rnpm": {
     "android": {

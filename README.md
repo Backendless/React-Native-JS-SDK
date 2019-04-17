@@ -41,42 +41,139 @@ import 'backendless-react-native';
 
 const APP_ID = 'YOUR_APP_ID';
 
-const APP_KEY = Platform.select({
+const API_KEY = Platform.select({
   ios    : 'YOUR_IOS_API_KEY',
   android: 'YOUR_ANDROID_API_KEY'
 });
 
-Backendless.initApp(APP_ID, APP_KEY);
+Backendless.initApp(APP_ID, API_KEY);
 ````
+
+Recommended to use corresponding Api Keys for each platform, but you can use any Api Key, for ex: JS_API_KEY or REST_API_KEY
+
+````
+Backendless.initApp(APP_ID, ANY_API_KEY);
+````
+
+### Features
 
 #### Register Device
 
 ````
-...
-constructor(props) {
-  super(props);
- 
-  Backendless.Messaging.registerDevice(['default'])
-    .then(r => console.log('registerDevice:', r))
-    .catch(e => console.log('registerDevice:', e));
+Backendless.Messaging.registerDevice(['default']).then(onSuccess).catch(onFail);
+````
+
+#### Unregister Device
+
+````
+Backendless.Messaging.unregisterDevice().then(onSuccess).catch(onFail);
+````
+
+#### Subscribe on Push Notifications
+
+````
+Backendless.Messaging.addPushNotificationListener(callback)
+Backendless.Messaging.removePushNotificationListener(callback)
+
+function callback(notification:Object){
+// notification.body => "push body"
+// notification.title => "push title"
+// notification.subtitle => "push subtitle" 
+// notification.sound => null
+// notification.badge => 2
+// notification.attachmentUrl => "https://backendlessappcontent.com/.../files/banner-4.jpg"
+// notification.contentAvailable => 0
+// notification.mutableContent => 1
+// notification.customHeaders => { myHeaderKey: "myHeaderValue" }
+// notification.templateName => "testName"
 }
-...
-````
-
-#### Receive Push Notifications
-
-````
-    Backendless.Messaging.addPushNotificationListener(notification => {
-        console.log('NOTIFICATION:', notification);
-    })     
 ````
 
 #### Subscribe on Push Notification Action Response
 
 ````
-    Backendless.Messaging.addPushNotificationActionListener(action => {
-        console.log('NOTIFICATION_ACTION:', action);
-    })     
+
+Backendless.Messaging.addPushNotificationActionListener(callback)
+Backendless.Messaging.removePushNotificationActionListener(callback)
+
+function callback(action:Object){
+
+// action.id => "button id" 
+// action.inlineReply => "some text" 
+
+// action.notification.body => "push body"
+// action.notification.title => "push title"
+// action.notification.subtitle => "push subtitle" 
+// action.notification.sound => null
+// action.notification.badge => 2
+// action.notification.attachmentUrl => "https://backendlessappcontent.com/.../files/banner-4.jpg"
+// action.notification.contentAvailable => 0
+// action.notification.mutableContent => 1
+// action.notification.customHeaders => { myHeaderKey: "myHeaderValue" }
+// action.notification.templateName => "testName"
+}
+    
 ````
   
-  
+#### Get Initial Notification
+
+````
+Backendless.Messaging.getInitialNotificationAction().then(onSuccess).catch(onFail)
+
+function onSuccess(action:Object){
+// action.id => "button id" or "com.apple.UNNotificationDefaultActionIdentifier" 
+// action.inlineReply => "some text" 
+
+// action.notification.body => "push body"
+// action.notification.title => "push title"
+// action.notification.subtitle => "push subtitle" 
+// action.notification.sound => null
+// action.notification.badge => 2
+// action.notification.attachmentUrl => "https://backendlessappcontent.com/.../files/banner-4.jpg"
+// action.notification.contentAvailable => 0
+// action.notification.mutableContent => 1
+// action.notification.customHeaders => { myHeaderKey: "myHeaderValue" }
+// action.notification.templateName => "testName"
+}
+
+```` 
+
+#### Get/Set Application Icon Badge Number
+
+````
+Backendless.Messaging.getAppBadgeNumber().then(onGetSuccess).catch(onFail)
+
+function onGetSuccess(badge:Number){
+}
+
+Backendless.Messaging.setAppBadgeNumber(badge:Number).then(onSetSuccess).catch(onFail)
+
+function onSetSuccess(void){
+}
+````
+
+#### Get Delivered Remote Notifications
+````
+Backendless.Messaging.getDeliveredNotifications().then(onSuccess).catch(onFail)
+
+function onSuccess(notifications:Array<Object>){
+}
+````
+
+#### Remove All Delivered Remote Notifications
+````
+Backendless.Messaging.removeAllDeliveredNotifications().then(onSuccess).catch(onFail)
+
+function onSuccess(void){
+}
+````
+
+#### Remove Delivered Remote Notifications
+````
+Backendless.Messaging.removeDeliveredNotifications(notificationIds:Array<String>).then(onSuccess).catch(onFail)
+
+function onSuccess(void){
+}
+````
+
+ 
