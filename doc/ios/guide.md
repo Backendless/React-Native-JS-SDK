@@ -82,7 +82,7 @@ And add as the first line of didFinishLaunchingWithOptions implementation the ne
 That’s enough to start receiving simple Remote Push Notification
 
 #### Advanced
-![img](./phone1.png) ![img](./phone1.png)
+![img](./phone2.png) ![img](./phone2.png)
 
 In order to use `Push Notification Templates` and receive rich notifications, including images and actions you have to add a `Notification Service` and enable `App Groups` and `RNBackendless` will take care about your notifications
 
