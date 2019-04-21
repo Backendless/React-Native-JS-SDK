@@ -13,6 +13,7 @@
 }
 
 static NSString *backendlessAppId = nil;
+static NSDictionary *initialNotificationAction = nil;
 
 static NSString *const kRegisterUserNotificationSettings = @"BLRegisterUserNotificationSettings";
 static NSString *const kRemoteNotificationsRegistered = @"BLRemoteNotificationsRegistered";
@@ -58,14 +59,11 @@ RCT_EXPORT_METHOD(unregisterDevice:(RCTPromiseResolveBlock)resolve rejector:(__u
     resolve(deviceUID);
 }
 
-RCT_EXPORT_METHOD(getInitialNotification:(RCTPromiseResolveBlock)resolve
+RCT_EXPORT_METHOD(getInitialNotificationAction:(RCTPromiseResolveBlock)resolve
                   reject:(__unused RCTPromiseRejectBlock)reject)
 {
-    NSObject *remoteNotification = self.bridge.launchOptions[UIApplicationLaunchOptionsRemoteNotificationKey];
-    NSMutableDictionary<NSString *, id> *notification = [remoteNotification mutableCopy];
-    
-    if (notification) {
-        resolve(notification);
+    if (initialNotificationAction) {
+        resolve(initialNotificationAction);
     } else {
         resolve((id)kCFNull);
     }
@@ -94,25 +92,7 @@ RCT_EXPORT_METHOD(getAppBadgeNumber:(RCTPromiseResolveBlock)resolve rejector:(__
     resolve(@(RCTSharedApplication().applicationIconBadgeNumber));
 }
 
-RCT_EXPORT_METHOD(removeAllDeliveredNotifications:(RCTPromiseResolveBlock)resolve rejector:(__unused RCTPromiseRejectBlock)reject)
-{
-    UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
-    [center removeAllDeliveredNotifications];
-    
-    resolve(nil);
-}
-
-RCT_EXPORT_METHOD(removeDeliveredNotifications:(NSArray<NSString *> *)identifiers
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejector:(__unused RCTPromiseRejectBlock)reject)
-{
-    UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
-    [center removeDeliveredNotificationsWithIdentifiers:identifiers];
-    
-    resolve(nil);
-}
-
-RCT_EXPORT_METHOD(getDeliveredNotifications:(RCTPromiseResolveBlock)resolve rejector:(__unused RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(getNotifications:(RCTPromiseResolveBlock)resolve rejector:(__unused RCTPromiseRejectBlock)reject)
 {
     UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
     [center getDeliveredNotificationsWithCompletionHandler:^(NSArray<UNNotification *> *_Nonnull notifications) {
@@ -124,6 +104,24 @@ RCT_EXPORT_METHOD(getDeliveredNotifications:(RCTPromiseResolveBlock)resolve reje
         
         resolve(clientNotifications);
     }];
+}
+
+RCT_EXPORT_METHOD(cancelNotification:(NSString *)notificationId
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejector:(__unused RCTPromiseRejectBlock)reject)
+{
+    UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
+    [center removeDeliveredNotificationsWithIdentifiers:@[notificationId]];
+    
+    resolve(nil);
+}
+
+RCT_EXPORT_METHOD(cancelAllNotifications:(RCTPromiseResolveBlock)resolve rejector:(__unused RCTPromiseRejectBlock)reject)
+{
+    UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
+    [center removeAllDeliveredNotifications];
+    
+    resolve(nil);
 }
 
 - (NSArray<NSString *> *)supportedEvents
@@ -335,13 +333,21 @@ RCT_EXPORT_METHOD(getDeliveredNotifications:(RCTPromiseResolveBlock)resolve reje
     
     NSMutableDictionary *action = [NSMutableDictionary new];
     
-    [action setObject:actionIdentifier ?:[NSNull new] forKey:@"id"];
+    if([actionIdentifier isEqualToString:@"com.apple.UNNotificationDefaultActionIdentifier"]){
+        [action setObject:[NSNull new] forKey:@"id"];
+    } else {
+        [action setObject:actionIdentifier ?:[NSNull new] forKey:@"id"];
+    }
     
     if ([response isKindOfClass:UNTextInputNotificationResponse.class]) {
         [action setObject:response.userText forKey:@"inlineReply"];
     }
     
     [action setObject:notification forKey:@"notification"];
+ 
+    if(!backendlessAppId){
+        initialNotificationAction = action;
+    }
     
     [[NSNotificationCenter defaultCenter] postNotificationName:kRemoteNotificationAction
                                                         object:self
@@ -373,6 +379,12 @@ RCT_EXPORT_METHOD(getDeliveredNotifications:(RCTPromiseResolveBlock)resolve reje
         }
         
         [notification removeObjectForKey:@"aps"];
+    }
+    
+    if ([notification valueForKey:@"body"]) {
+        [notification setObject:[notification valueForKey:@"body"] ?:[NSNull new] forKey:@"message"];
+        
+        [notification removeObjectForKey:@"body"];
     }
     
     return notification;
@@ -476,7 +488,7 @@ RCT_EXPORT_METHOD(getDeliveredNotifications:(RCTPromiseResolveBlock)resolve reje
         content.categoryIdentifier = [self setActions:[pushTemplate valueForKey:@"actions"]];
     }
     
-    [userInfo setObject:request.identifier forKey:@"identifier"];
+    [userInfo setObject:request.identifier forKey:@"id"];
     
     [userInfo setObject:content.body ?:[NSNull new] forKey:@"body"];
     [userInfo setObject:content.title ?:[NSNull new] forKey:@"title"];
