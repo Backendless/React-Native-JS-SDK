@@ -17,10 +17,15 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.service.notification.StatusBarNotification;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.RemoteInput;
 import android.util.Log;
+
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.WritableArray;
+import com.facebook.react.bridge.WritableMap;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,32 +46,81 @@ class RNBackendlessPushNotificationHelper {
         this.resources = appContext.getResources();
         this.packageName = appContext.getPackageName();
 
-        this.backendlessAppId = RNBackendlessHelper.getAppId(appContext);
-        this.notificationManager = getNotificationService(appContext);
+        this.backendlessAppId = RNBackendlessStorage.getAppId(appContext);
+        this.notificationManager = getNotificationManager(appContext);
     }
 
-    static private NotificationManager getNotificationService(Application appContext) {
+    static private NotificationManager getNotificationManager(Application appContext) {
         return (NotificationManager) appContext.getSystemService(Context.NOTIFICATION_SERVICE);
     }
 
-    static void cancelPushNotification(Application appContext, Integer notificationId) {
-        Log.i(LOG_TAG, "Cancel Push Notification with id: " + notificationId);
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    static WritableArray getNotifications(Application appContext) {
+        WritableArray notifications = Arguments.createArray();
+        NotificationManager notificationManager = getNotificationManager(appContext);
+        StatusBarNotification[] statusBarNotifications = notificationManager.getActiveNotifications();
 
-        NotificationManager notificationManager = getNotificationService(appContext);
-        notificationManager.cancel(notificationId);
+        for (StatusBarNotification statusBarNotification : statusBarNotifications) {
+            Bundle notificationBundle = statusBarNotification.getNotification().extras.getBundle("notification");
+
+            if (notificationBundle != null) {
+                WritableMap notification = RNBackendlessPushNotificationMessage.fromBundleToJSObject(notificationBundle);
+
+                notifications.pushMap(notification);
+            }
+        }
+
+        return notifications;
+    }
+
+    static void cancelAllNotifications(Application appContext) {
+        NotificationManager notificationManager = getNotificationManager(appContext);
+        notificationManager.cancelAll();
+    }
+
+    static void cancelNotification(Application appContext, Integer notificationId) {
+        Log.d(LOG_TAG, "Cancel Push Notification with id: " + notificationId);
+
+        NotificationManager notificationManager = getNotificationManager(appContext);
+
+        if (notificationId != null) {
+            notificationManager.cancel(notificationId);
+        }
     }
 
     static void deleteNotificationChannels(Application appContext) {
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Log.i(LOG_TAG, "Delete all the notification channels");
+            Log.d(LOG_TAG, "Delete all the notification channels");
 
-            NotificationManager notificationManager = getNotificationService(appContext);
+            NotificationManager notificationManager = getNotificationManager(appContext);
             List<NotificationChannel> notificationChannels = notificationManager.getNotificationChannels();
 
             for (NotificationChannel notificationChannel : notificationChannels) {
                 notificationManager.deleteNotificationChannel(notificationChannel.getId());
             }
         }
+    }
+
+    static WritableMap parseNotificationActionBundle(Bundle bundle) {
+        WritableMap notificationAction = Arguments.createMap();
+
+        Bundle notificationBundle = bundle.getBundle("notification");
+        String actionId = bundle.getString("actionId");
+        String inlineReply = bundle.getString("inlineReply");
+
+        if (notificationBundle != null) {
+            notificationAction.putMap("notification", RNBackendlessPushNotificationMessage.fromBundleToJSObject(notificationBundle));
+        }
+
+        if (actionId != null) {
+            notificationAction.putString("id", actionId);
+        }
+
+        if (inlineReply != null) {
+            notificationAction.putString("inlineReply", inlineReply);
+        }
+
+        return notificationAction;
     }
 
     private Class getMainActivityClass() {
@@ -152,8 +206,10 @@ class RNBackendlessPushNotificationHelper {
         }
     }
 
-    void sendToNotificationCentre(RNBackendlessPushNotificationMessage pushMessage) {
-        if (getMainActivityClass() == null) {
+    void sendToNotificationCentre(RNBackendlessPushNotificationMessage pushMessage, Bundle pushMessageBundle) {
+        Class mainActivityClass = getMainActivityClass();
+
+        if (mainActivityClass == null) {
             Log.e(LOG_TAG, "No activity class found for the notification");
             return;
         }
@@ -182,7 +238,19 @@ class RNBackendlessPushNotificationHelper {
         setBadge(pushMessage, notification);
         setColor(pushMessage, notification);
         setContentIntent(notification, notificationID);
-        setActions(pushMessage, notification, notificationID);
+        setActions(pushMessage, notification, notificationID, pushMessageBundle);
+
+        Bundle notificationBundle = new Bundle();
+        notificationBundle.putBundle("notification", pushMessageBundle);
+        notification.addExtras(notificationBundle);
+
+        Intent intent = new Intent(appContext, RNBackendlessPushNotificationActionReceiver.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putExtra("notification", pushMessageBundle);
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(appContext, notificationID, intent, 0);
+
+        notification.setContentIntent(pendingIntent);
 
         notificationManager.notify(notificationID, notification.build());
     }
@@ -222,7 +290,7 @@ class RNBackendlessPushNotificationHelper {
         }
     }
 
-    private void setActions(RNBackendlessPushNotificationMessage pushMessage, NotificationCompat.Builder notification, int notificationID) {
+    private void setActions(RNBackendlessPushNotificationMessage pushMessage, NotificationCompat.Builder notification, int notificationID, Bundle pushMessageBundle) {
         RNBackendlessPushNotificationAction[] actions = pushMessage.getActions();
 
         if (actions != null) {
@@ -233,16 +301,8 @@ class RNBackendlessPushNotificationHelper {
 
                 actionIntent.setAction(appContext.getPackageName() + "." + action.getId());
 
-                Bundle intentNotification = new Bundle();
-                intentNotification.putInt("id", notificationID);
-                intentNotification.putString("message", pushMessage.getMessage());
-                intentNotification.putString("title", pushMessage.getTitle());
-                intentNotification.putString("subtitle", pushMessage.getSubtitle());
-                intentNotification.putBundle("customHeaders", pushMessage.customHeadersToIntentBundle());
-
                 actionIntent.putExtra("actionId", action.getId());
-                actionIntent.putExtra("actionTitle", action.getTitle());
-                actionIntent.putExtra("notification", intentNotification);
+                actionIntent.putExtra("notification", pushMessageBundle);
 
                 actionIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 

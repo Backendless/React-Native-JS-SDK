@@ -1,8 +1,6 @@
 package com.reactlibrary;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.util.Log;
+import android.os.Bundle;
 
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
@@ -17,44 +15,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Iterator;
+import java.util.Set;
 
 class RNBackendlessHelper {
     final static String LOG_TAG = "RNBackendless";
-    final static private String SHARED_PREFERENCES_KEY = "RNBackendlessPreferences";
-    final static private String PUSH_TEMPLATES_KEY = "PushTemplates";
-    final static private String APP_ID_KEY = "AppId";
-
-    private static SharedPreferences getSharedPreferences(Context context) {
-        return context.getSharedPreferences(SHARED_PREFERENCES_KEY, Context.MODE_PRIVATE);
-    }
-
-    static String getAppId(Context context) {
-        return getSharedPreferences(context).getString(APP_ID_KEY, "");
-    }
-
-    static void setAppId(Context context, String appId) {
-        SharedPreferences.Editor editor = getSharedPreferences(context).edit();
-        editor.putString(APP_ID_KEY, appId);
-        editor.apply();
-    }
-
-    static JSONObject getPushTemplates(Context context) {
-        String str = getSharedPreferences(context).getString(PUSH_TEMPLATES_KEY, "");
-
-        try {
-            return new JSONObject(str);
-        } catch (JSONException e) {
-            Log.e(LOG_TAG, e.getMessage(), e.getCause());
-
-            return new JSONObject();
-        }
-    }
-
-    static void setPushTemplates(Context context, JSONObject templates) {
-        SharedPreferences.Editor editor = getSharedPreferences(context).edit();
-        editor.putString(PUSH_TEMPLATES_KEY, templates.toString());
-        editor.apply();
-    }
 
     private static WritableMap convertJsonToMap(JSONObject jsonObject) throws JSONException {
         WritableMap map = new WritableNativeMap();
@@ -169,5 +133,32 @@ class RNBackendlessHelper {
         }
 
         return array;
+    }
+
+    static JSONObject parseJSON(String dataString) {
+        try {
+            return new JSONObject(dataString);
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            return null;
+        }
+    }
+
+    private static JSONObject convertBundleToJSONObject(Bundle bundle) throws JSONException {
+        JSONObject json = new JSONObject();
+        Set<String> keys = bundle.keySet();
+
+        for (String key : keys) {
+            Object value = bundle.get(key);
+
+            if (value instanceof Bundle) {
+                json.put(key, convertBundleToJSONObject((Bundle) value));
+            } else {
+                json.put(key, JSONObject.wrap(value));
+            }
+        }
+
+        return json;
     }
 }
