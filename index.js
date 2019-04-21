@@ -1,12 +1,13 @@
-import { NativeEventEmitter, NativeModules, Platform } from 'react-native';
+import { NativeEventEmitter, NativeModules, Platform, DeviceEventEmitter } from 'react-native';
 import Backendless from 'backendless';
 
-const RNBackendless = NativeModules.RNBackendless;
-const RNBackendlessEmitter = new NativeEventEmitter(RNBackendless);
+const { RNBackendless, RNBackendlessEmitter } = require('./module');
 
 const _initApp = Backendless.initApp;
 const _registerDevice = Backendless.Messaging.registerDevice;
 const _unregisterDevice = Backendless.Messaging.unregisterDevice;
+
+function voidResolver(){}
 
 Backendless.initApp = function (appId, apiKey) {
   RNBackendless.setAppId(appId);
@@ -44,20 +45,20 @@ Backendless.Messaging.registerDevice = async function (deviceToken, channels, ex
 Backendless.Messaging.unregisterDevice = async function (deviceUid) {
   return Promise.resolve()
     .then(async () => {
+      const device = await RNBackendless.unregisterDevice();
+
       Backendless.setupDevice({
-        uuid    : deviceUid,
+        uuid    : device.uuid,
         version : device.version,
         platform: Platform.OS,
       });
-
-      await RNBackendless.unregisterDevice();
 
       return _unregisterDevice.call(this)
     })
 };
 
-Backendless.Messaging.getInitialNotification = () => {
-  return RNBackendless.getInitialNotification();
+Backendless.Messaging.getInitialNotificationAction = () => {
+  return RNBackendless.getInitialNotificationAction();
 };
 
 Backendless.Messaging.addPushNotificationListener = callback => {
@@ -81,19 +82,18 @@ Backendless.Messaging.getAppBadgeNumber = () => {
 };
 
 Backendless.Messaging.setAppBadgeNumber = value => {
-  return RNBackendless.setAppBadgeNumber(value);
+  return RNBackendless.setAppBadgeNumber(value).then(voidResolver);
 };
 
-Backendless.Messaging.removeAllDeliveredNotifications = () => {
-  return RNBackendless.removeAllDeliveredNotifications();
+Backendless.Messaging.getNotifications = () => {
+  return RNBackendless.getNotifications().then(voidResolver);
 };
 
-Backendless.Messaging.removeDeliveredNotifications = notificationIds => {
-  return RNBackendless.removeDeliveredNotifications(notificationIds);
+Backendless.Messaging.cancelNotification = notificationId => {
+  return RNBackendless.cancelNotification(notificationId).then(voidResolver);
 };
 
-Backendless.Messaging.getDeliveredNotifications = () => {
-  return RNBackendless.getDeliveredNotifications();
+Backendless.Messaging.cancelAllNotifications = () => {
+  return RNBackendless.cancelAllNotifications().then(voidResolver);
 };
-
 
