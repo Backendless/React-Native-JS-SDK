@@ -7,33 +7,39 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.facebook.react.bridge.Arguments;
-import com.facebook.react.bridge.WritableMap;
-
 import static com.reactlibrary.RNBackendlessHelper.LOG_TAG;
 
 public class RNBackendlessPushNotificationActionReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        String action = intent.getAction();
 
-        Log.v(LOG_TAG, "RNBackendlessPushNotificationActionReceiver receive an action: " + action);
+        Log.d(LOG_TAG, "RNBackendlessPushNotificationActionReceiver receive an action: " + intent.getExtras());
+
+        Bundle actionBundle = new Bundle();
+
+        actionBundle.putBundle("notification", intent.getBundleExtra("notification"));
+        actionBundle.putString("actionId", intent.getStringExtra("actionId"));
 
         Bundle remoteInput = RemoteInput.getResultsFromIntent(intent);
 
-        WritableMap jsObject = Arguments.createMap();
-
-        jsObject.putString("title", intent.getStringExtra("actionTitle"));
-        jsObject.putString("id", intent.getStringExtra("actionId"));
-        jsObject.putMap("notification", Arguments.makeNativeMap(intent.getBundleExtra("notification")));
-
         if (remoteInput != null) {
-            String reply = (String) remoteInput.getCharSequence("inline_reply");
+            String inlineReply = (String) remoteInput.getCharSequence("inline_reply");
 
-            jsObject.putString("inlineReplay", reply);
+            actionBundle.putString("inlineReply", inlineReply);
         }
 
-        RNBackendlessModule.sendNotificationActionEvent(jsObject);
+        Intent startIntent = context
+                .getPackageManager()
+                .getLaunchIntentForPackage(context.getPackageName());
+
+        if (startIntent != null) {
+            startIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startIntent.putExtra("action", actionBundle);
+
+            context.startActivity(startIntent);
+        }
+
+        RNBackendlessModule.sendNotificationActionEvent(actionBundle);
     }
 }

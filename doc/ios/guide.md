@@ -8,33 +8,93 @@
 open ios/<ProjectName>.xcodeproj
 ````
 
-#### Setup `Signing dev team`
-You must define the field for both targets: <ProjectName> and <ProjectName>Test
+#### Basic Setup
+![img](./phone1.png)
+
+You must specify the `Signing team` for both targets: <ProjectName> and <ProjectName>Test as it shown on the image below
 ![img](./signing-dev-team.png)
 
-#### Setup `Bundle identifier`
-The value must be the same as in you certificate 
+Specify `Bundle identifier` must be the same as in your certificate 
+ 
 ![img](./bundle-identifier.png)
-![img](./certificates.png)
 
-### Add PushNotificationIOS library 
-- add the following to your Project: node_modules/react-native/Libraries/PushNotificationIOS/RCTPushNotification.xcodeproj
-- add the following to Link Binary With Libraries: libRCTPushNotification.a
+And `RNBackendless` native module into your project’s libraries 
 ![img](./link-binary-library.png)
 
-### Enable Push Notifications compatibility
+And `RNBackendless` to Build Phases for main target
+![img](./add-binary-library.png)
+
+Enable `Push Notifications` compatibility
 ![img](./enable-push-notifications-compatibility.png)
+
+Modify your AppDelegate.m file
+
+Import RNBackendless library
+
+```` 
+#import <RNBackendless/RNBackendless.h>
+````
+
+Add the following implementation
+```` 
+- (void)application:(UIApplication *)application didRegisterUserNotificationSettings:(UIUserNotificationSettings *)notificationSettings
+{
+  [RNBackendless didRegisterUserNotificationSettings:notificationSettings];
+}
+
+- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
+{
+  [RNBackendless didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
+}
+
+- (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error
+{
+  [RNBackendless didFailToRegisterForRemoteNotificationsWithError:error];
+}
+
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(nonnull UNTextInputNotificationResponse *)response withCompletionHandler:(nonnull void (^)(void))completionHandler
+{
+  [RNBackendless didReceiveNotificationResponse:response];
+  
+  completionHandler();
+}
+
+- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo
+{
+  [RNBackendless didReceiveRemoteNotification:userInfo];
+}
+
+- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo
+fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler
+{
+  [RNBackendless didReceiveRemoteNotification:userInfo];
+  
+  completionHandler(UIBackgroundFetchResultNewData);
+}
+````
+
+And add as the first line of didFinishLaunchingWithOptions implementation the next line:
+
+````
+[UNUserNotificationCenter currentNotificationCenter].delegate = self;
+````
+
+That’s enough to start receiving simple Remote Push Notification
+
+#### Advanced
+![img](./phone2.png) ![img](./phone3.png)
+
+In order to use `Push Notification Templates` and receive rich notifications, including images and actions you have to add a `Notification Service` and enable `App Groups` and `RNBackendless` will take care about your notifications
 
 ### Add Notification Service Extension
 ![img](./add-notification-service-1.png)
 ![img](./add-notification-service-2.png)
-![img](./add-notification-service-3.png)
 
-Add libraries for the NotificationService Extension
+Add to the service React libraries and RNBackendless library
 - libRCTWebSocket.a
 - libReact.a
-- libRNBackendless.a		
-![img](./notification-service-libs.png)
+- libRNBackendless.a
+![img](./add-notification-service-3.png)
 
 And also you must add `Other Linker Flags` in Build Settings for the NotificationService Extension
 ````
@@ -44,82 +104,21 @@ $(inherited)
 ````
 ![img](./other-linker-flags.png)
 
-### Change AppDelegate files
-Add the next line into `AppDelegate.h` file 
+In order to display a push notification based on a `Push Notification Template` need to enable App Group in Capabilities section for the extension, you can read more [here](https://backendless.com/docs/ios/push_xcode_setup_for_apn.html)
+
+The most important thing is your group must contain `BackendlessPushTemplates` phrase   
+
+![img](./add-notification-service-4.png)
+![img](./add-notification-service-5.png)
+
+And do the same for main target
+
+![img](./add-notification-service-6.png)
+![img](./add-notification-service-7.png)
+
+Change `didReceiveNotificationRequest` implementation in `NotificationService.m` file 
 
 ````
-#import <UserNotifications/UserNotifications.h>
-````
-
-Add the next imports into `AppDelegate.m` file
-````
-#import <React/RCTPushNotificationManager.h>
-#import <RNBackendless/RNBackendless.h>
-````
-
-Add the next methods into `AppDelegate.m` file
-````
-// Required to register for notifications
-- (void)application:(UIApplication *)application didRegisterUserNotificationSettings:(UIUserNotificationSettings *)notificationSettings
-{
-  [RCTPushNotificationManager didRegisterUserNotificationSettings:notificationSettings];
-}
-// Required for the register event.
-- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
-{
-  [RCTPushNotificationManager didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
-}
-- (void)userNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(nonnull UNNotificationResponse *)response withCompletionHandler:(nonnull void (^)(void))completionHandler
-{
-  [RNBackendless didReceiveNotificationResponse:response];
-
-  completionHandler();
-}
-// Required for the notification event. You must call the completion handler after handling the remote notification.
-- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo
-fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler
-{
-  [RCTPushNotificationManager didReceiveRemoteNotification:userInfo fetchCompletionHandler:completionHandler];
-}
-// Required for the registrationError event.
-- (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error
-{
-  [RCTPushNotificationManager didFailToRegisterForRemoteNotificationsWithError:error];
-}
-// Required for the localNotification event.
-- (void)application:(UIApplication *)application didReceiveLocalNotification:(UILocalNotification *)notification
-{
-  [RCTPushNotificationManager didReceiveLocalNotification:notification];
-}
-````
-
-Add the next line into `didFinishLaunchingWithOptions` method, as the first line in the method  
-````
- [UNUserNotificationCenter currentNotificationCenter].delegate = self;
-````
-
-### Change Notification Service Extension files
-
-Replace content in `NotificationService.m` file with the next code
-````
-//
-//  NotificationService.m
-//  NotificationService
-//
-//  Copyright © 2018 Facebook. All rights reserved.
-//
-
-#import "NotificationService.h"
-#import <RNBackendless/RNBackendless.h>
-
-@interface NotificationService ()
-
-@property (nonatomic, strong) void (^contentHandler)(UNNotificationContent *contentToDeliver);
-@property (nonatomic, strong) UNMutableNotificationContent *bestAttemptContent;
-
-@end
-
-@implementation NotificationService
 
 - (void)didReceiveNotificationRequest:(UNNotificationRequest *)request withContentHandler:(void (^)(UNNotificationContent * _Nonnull))contentHandler {
   self.contentHandler = contentHandler;
@@ -127,14 +126,5 @@ Replace content in `NotificationService.m` file with the next code
   
   [RNBackendless processMutableContent:request withContentHandler:contentHandler];
 }
-
-- (void)serviceExtensionTimeWillExpire {
-  // Called just before the extension will be terminated by the system.
-  // Use this as an opportunity to deliver your "best attempt" at modified content, otherwise the original push payload will be used.
-  self.contentHandler(self.bestAttemptContent);
-}
-
-@end
-
 
 ````

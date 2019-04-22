@@ -1,9 +1,13 @@
 package com.reactlibrary;
 
+import android.app.Activity;
 import android.app.Application;
+import android.content.Intent;
 import android.os.Build;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
@@ -12,6 +16,7 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -26,57 +31,63 @@ import static com.reactlibrary.RNBackendlessHelper.LOG_TAG;
 
 public class RNBackendlessModule extends ReactContextBaseJavaModule {
     static private ReactApplicationContext reactContext;
+    static private Application applicationContext;
+
+    private String deviceUid;
+    private String deviceToken;
 
     RNBackendlessModule(ReactApplicationContext context) {
         super(context);
 
         reactContext = context;
-
-        JSONObject storedTemplates = RNBackendlessHelper.getPushTemplates(reactContext);
-
-        RNBackendlessPushNotificationTemplates.restoreTemplates(storedTemplates);
+        applicationContext = (Application) context.getApplicationContext();
     }
 
     private static void sendEvent(String eventName, @Nullable WritableMap params) {
-        Log.v(LOG_TAG, "Send \"" + eventName + "\" event to JS Code, params: " + params);
+        if (reactContext == null) {
+            Log.v(LOG_TAG, "JS code is not running, ignore sending \"" + eventName + "\" event with params: " + params);
 
-        reactContext
-                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                .emit(eventName, params);
+        } else {
+            Log.v(LOG_TAG, "Send \"" + eventName + "\" event to JS Code, params: " + params);
+
+            reactContext
+                    .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                    .emit(eventName, params);
+        }
     }
 
     static void sendNotificationEvent(WritableMap notification) {
         sendEvent("notification", notification);
     }
 
-    static void sendNotificationActionEvent(WritableMap action) {
-        sendEvent("notificationAction", action);
+    static void sendNotificationActionEvent(Bundle notificationBundle) {
+        WritableMap notification = RNBackendlessPushNotificationHelper.parseNotificationActionBundle(notificationBundle);
+
+        sendEvent("notificationAction", notification);
     }
 
+    @NonNull
     @Override
     public String getName() {
         return "RNBackendless";
     }
 
-    @ReactMethod
-    public void cancelNotification(Integer notificationId, Promise promise) {
-        try {
-            Application appContext = (Application) reactContext.getApplicationContext();
-            RNBackendlessPushNotificationHelper.cancelPushNotification(appContext, notificationId);
-
-            WritableMap result = Arguments.createMap();
-
-            result.putDouble("notificationId", notificationId);
-
-            promise.resolve("Push Notification with id: \"" + notificationId + "\" has been canceled.");
-
-        } catch (Exception e) {
-            promise.reject("Can not cancel Push Notification with id: " + notificationId, e);
+    private WritableMap getDevice() {
+        if (deviceToken == null) {
+            return null;
         }
+
+        WritableMap device = Arguments.createMap();
+
+        device.putString("version", Build.VERSION.RELEASE);
+        device.putString("uuid", deviceUid);
+        device.putString("token", deviceToken);
+
+        return device;
     }
 
     @ReactMethod
-    public void getDeviceInfo(final Promise promise) {
+    public void registerDevice(final Promise promise) {
         FirebaseInstanceId firebaseInstanceId = FirebaseInstanceId.getInstance();
         Task<InstanceIdResult> instanceIdTast = firebaseInstanceId.getInstanceId();
 
@@ -94,13 +105,10 @@ public class RNBackendlessModule extends ReactContextBaseJavaModule {
                         throw new Exception("Firebase Instance is null");
                     }
 
-                    final WritableMap result = Arguments.createMap();
+                    deviceUid = instanceIdResult.getId();
+                    deviceToken = instanceIdResult.getToken();
 
-                    result.putString("version", Build.VERSION.RELEASE);
-                    result.putString("uuid", instanceIdResult.getId());
-                    result.putString("token", instanceIdResult.getToken());
-
-                    promise.resolve(result);
+                    promise.resolve(getDevice());
 
                 } catch (Exception e) {
                     Log.e(LOG_TAG, "Can not get FCM Token:", e);
@@ -112,10 +120,61 @@ public class RNBackendlessModule extends ReactContextBaseJavaModule {
         });
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    @ReactMethod
+    public void getNotifications(final Promise promise) {
+        WritableArray notifications = RNBackendlessPushNotificationHelper.getNotifications(applicationContext);
+
+        Log.d(LOG_TAG, "Get Delivered Notifications: " + notifications);
+
+        promise.resolve(notifications);
+    }
+
+    @ReactMethod
+    public void cancelNotification(final Integer notificationId, final Promise promise) {
+        RNBackendlessPushNotificationHelper.cancelNotification(applicationContext, notificationId);
+
+        promise.resolve(null);
+    }
+
+    @ReactMethod
+    public void cancelAllNotifications(final Promise promise) {
+        RNBackendlessPushNotificationHelper.cancelAllNotifications(applicationContext);
+
+        promise.resolve(null);
+    }
+
+    @ReactMethod
+    public void unregisterDevice(final Promise promise) {
+        WritableMap device = getDevice();
+
+        if (device == null) {
+            promise.reject(new Throwable("Device is not registered yet!"));
+        } else {
+            promise.resolve(device);
+        }
+    }
+
+    @ReactMethod
+    public void getInitialNotificationAction(Promise promise) {
+        WritableMap notification = null;
+        Activity activity = getCurrentActivity();
+
+        if (activity != null) {
+            Intent intent = activity.getIntent();
+
+            if (intent.hasExtra("action")) {
+                Bundle notificationBundle = intent.getBundleExtra("action");
+                notification = RNBackendlessPushNotificationHelper.parseNotificationActionBundle(notificationBundle);
+            }
+        }
+
+        promise.resolve(notification);
+    }
 
     @ReactMethod
     public void setAppId(String appId) {
-        RNBackendlessHelper.setAppId(reactContext, appId);
+        RNBackendlessStorage.setAppId(applicationContext, appId);
     }
 
     @ReactMethod
@@ -132,12 +191,8 @@ public class RNBackendlessModule extends ReactContextBaseJavaModule {
         if (templatesJSON != null) {
             Log.v(LOG_TAG, "templates: " + templatesJSON);
 
-            RNBackendlessHelper.setPushTemplates(reactContext, templatesJSON);
-
-            RNBackendlessPushNotificationTemplates.restoreTemplates(templatesJSON);
-
-            Application appContext = (Application) reactContext.getApplicationContext();
-            RNBackendlessPushNotificationHelper.deleteNotificationChannels(appContext);
+            RNBackendlessStorage.setPushTemplates(applicationContext, templatesJSON);
+            RNBackendlessPushNotificationHelper.deleteNotificationChannels(applicationContext);
 
             promise.resolve(null);
         }

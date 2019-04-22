@@ -3,11 +3,14 @@ package com.reactlibrary;
 import android.os.Bundle;
 
 import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 
 class RNBackendlessPushNotificationMessage {
@@ -126,128 +129,133 @@ class RNBackendlessPushNotificationMessage {
         return template.getLightsColor();
     }
 
-    WritableMap toJSObject() {
-        WritableMap jsObject = Arguments.createMap();
+    Bundle toBundle() {
+        Bundle bundle = new Bundle();
+
+        if (getId() != null) {
+            bundle.putInt("id", getId());
+        }
 
         if (getMessage() != null) {
-            jsObject.putString("message", getMessage());
+            bundle.putString("message", getMessage());
         }
 
         if (getTitle() != null) {
-            jsObject.putString("title", getTitle());
+            bundle.putString("title", getTitle());
         }
 
         if (getSubtitle() != null) {
-            jsObject.putString("subtitle", getSubtitle());
-        }
-
-        if (getId() != null) {
-            jsObject.putInt("id", getId());
+            bundle.putString("subtitle", getSubtitle());
         }
 
         if (getTemplateName() != null) {
-            jsObject.putString("templateName", getTemplateName());
+            bundle.putString("templateName", getTemplateName());
         }
 
         if (getBadge() != null) {
-            jsObject.putInt("badgeType", getBadge());
+            bundle.putInt("badgeType", getBadge());
         }
 
         if (getShowBadge() != null) {
-            jsObject.putBoolean("showBadge", getShowBadge());
+            bundle.putBoolean("showBadge", getShowBadge());
         }
 
         if (getBadgeNumber() != null) {
-            jsObject.putInt("badgeNumber", getBadgeNumber());
+            bundle.putInt("badgeNumber", getBadgeNumber());
         }
 
         if (getPriority() != null) {
-            jsObject.putInt("priority", getPriority());
+            bundle.putInt("priority", getPriority());
         }
 
         if (getColorCode() != null) {
-            jsObject.putInt("colorCode", getColorCode());
+            bundle.putInt("colorCode", getColorCode());
         }
 
         if (getLightsColor() != null) {
-            jsObject.putInt("lightsColor", getLightsColor());
+            bundle.putInt("lightsColor", getLightsColor());
         }
 
         if (getIcon() != null) {
-            jsObject.putString("icon", getIcon());
+            bundle.putString("icon", getIcon());
         }
 
         if (getLargeIcon() != null) {
-            jsObject.putString("largeIcon", getLargeIcon());
+            bundle.putString("largeIcon", getLargeIcon());
         }
 
         if (getAttachmentUrl() != null) {
-            jsObject.putString("attachmentUrl", getAttachmentUrl());
+            bundle.putString("attachmentUrl", getAttachmentUrl());
         }
 
         if (getSound() != null) {
-            jsObject.putString("sound", getSound());
+            bundle.putString("sound", getSound());
         }
 
         if (getVibrate() != null) {
-            WritableArray vibrateArray = Arguments.createArray();
-
-            for (long v : getVibrate()) {
-                vibrateArray.pushDouble(v);
-            }
-
-            jsObject.putArray("vibrate", vibrateArray);
+            bundle.putLongArray("vibrate", getVibrate());
         }
 
         if (getCancelOnTap() != null) {
-            jsObject.putBoolean("cancelOnTap", getCancelOnTap());
+            bundle.putBoolean("cancelOnTap", getCancelOnTap());
         }
 
         if (getCancelAfter() != null) {
-            jsObject.putInt("cancelAfter", getCancelAfter());
+            bundle.putInt("cancelAfter", getCancelAfter());
         }
 
         if (getActions() != null) {
-            WritableArray actionsArray = Arguments.createArray();
+            Bundle actionsList = new Bundle();
 
             for (RNBackendlessPushNotificationAction v : getActions()) {
                 Bundle action = new Bundle();
                 action.putString("id", v.getId());
                 action.putString("title", v.getTitle());
-                action.putBoolean("inlineReplay", v.getOptions() == 1);
+                action.putBoolean("inlineReply", v.getOptions() == 1);
 
-                actionsArray.pushMap(Arguments.makeNativeMap(action));
+                actionsList.putBundle(v.getId(), action);
             }
 
-            jsObject.putArray("actions", actionsArray);
+            bundle.putBundle("actions", actionsList);
         }
 
         if (customHeaders != null) {
-            WritableMap customHeadersMap = Arguments.createMap();
+            Bundle customHeadersMap = new Bundle();
 
             for (String key : customHeaders.keySet()) {
                 customHeadersMap.putString(key, customHeaders.get(key));
             }
 
-            jsObject.putMap("customHeaders", customHeadersMap);
+            bundle.putBundle("customHeaders", customHeadersMap);
         }
 
         if (template.getContentAvailable() != null) {
-            jsObject.putBoolean("contentAvailable", template.getContentAvailable() == 1);
+            bundle.putBoolean("contentAvailable", template.getContentAvailable() == 1);
         }
 
-        return jsObject;
+        return bundle;
     }
 
-    Bundle customHeadersToIntentBundle() {
-        Bundle intentBundle = new Bundle();
+    static WritableMap fromBundleToJSObject(Bundle bundle) {
+        WritableMap pushMessage = Arguments.makeNativeMap(bundle);
 
-        if (customHeaders != null) {
-            for (String key : customHeaders.keySet()) {
-                intentBundle.putString(key, customHeaders.get(key));
+        if (pushMessage.hasKey("actions")) {
+            ReadableMap actionsMap = pushMessage.getMap("actions");
+
+            if (actionsMap != null) {
+                ReadableMapKeySetIterator iterator = actionsMap.keySetIterator();
+                WritableArray actionsArray = Arguments.createArray();
+
+                while (iterator.hasNextKey()) {
+                    WritableMap action = Arguments.createMap();
+                    action.merge(Objects.requireNonNull(actionsMap.getMap(iterator.nextKey())));
+                    actionsArray.pushMap(action);
+                }
+
+                pushMessage.putArray("actions", actionsArray);
             }
         }
 
-        return intentBundle;
+        return pushMessage;
     }
 }

@@ -4,10 +4,7 @@ import android.app.Application;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.facebook.react.ReactApplication;
-import com.facebook.react.ReactInstanceManager;
-import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.bridge.WritableMap;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -34,61 +31,55 @@ public class RNBackendlessPushNotificationService extends FirebaseMessagingServi
 
         new Thread(new Runnable() {
             public void run() {
-                ReactInstanceManager mReactInstanceManager = ((ReactApplication) getApplication()).getReactNativeHost().getReactInstanceManager();
-                ReactContext context = mReactInstanceManager.getCurrentReactContext();
-
-                if (context != null) {
-                    handleRemotePushNotification((ReactApplicationContext) context, bundle);
-
-                } else {
-                    mReactInstanceManager.addReactInstanceEventListener(new ReactInstanceManager.ReactInstanceEventListener() {
-                        public void onReactContextInitialized(ReactContext context) {
-                            handleRemotePushNotification((ReactApplicationContext) context, bundle);
-                        }
-                    });
-
-                    if (!mReactInstanceManager.hasStartedCreatingInitialContext()) {
-                        mReactInstanceManager.createReactContextInBackground();
-                    }
-                }
+                handleRemotePushNotification(getApplication(), bundle);
             }
         }).start();
     }
 
-    private JSONObject parseJSON(String dataString) {
-        try {
-            return new JSONObject(dataString);
-        } catch (Exception e) {
-            e.printStackTrace();
-
-            return null;
-        }
-    }
-
-    private RNBackendlessPushNotificationTemplate getTemplate(Bundle bundle) {
+    private RNBackendlessPushNotificationTemplate getTemplate(Application context, Bundle bundle) {
         String immediatePushString = bundle.getString(RNBackendlessPushNotificationMessage.IMMEDIATE_PUSH_KEY);
         String templateName = bundle.getString(RNBackendlessPushNotificationMessage.TEMPLATE_NAME_KEY);
 
+        RNBackendlessPushNotificationTemplate template = null;
+
         if (immediatePushString != null) {
-            JSONObject immediatePushData = parseJSON(immediatePushString);
+            JSONObject immediatePushData = RNBackendlessHelper.parseJSON(immediatePushString);
 
             if (immediatePushData != null) {
-                return new RNBackendlessPushNotificationTemplate(immediatePushData);
+                template = new RNBackendlessPushNotificationTemplate(immediatePushData);
+
+                Log.d(LOG_TAG, "built Immediate Push Notification Template: " + template);
             } else {
                 Log.e(LOG_TAG, "Can not parse \"" + RNBackendlessPushNotificationMessage.IMMEDIATE_PUSH_KEY + "\": " + immediatePushString);
             }
         }
 
-        if (templateName != null) {
-            return RNBackendlessPushNotificationTemplates.getTemplate(templateName);
+        if (template == null && templateName != null) {
+            template = RNBackendlessStorage.getTemplate(context, templateName);
+
+            Log.d(LOG_TAG, "got stored Push Notification Template: " + template);
         }
 
-        return new RNBackendlessPushNotificationTemplate();
+        if (template == null) {
+            template = new RNBackendlessPushNotificationTemplate();
+
+            Log.d(LOG_TAG, "create empty Push Notification Template: " + template);
+        }
+
+        return template;
     }
 
-    private void handleRemotePushNotification(ReactApplicationContext context, Bundle bundle) {
-        RNBackendlessPushNotificationTemplate template = getTemplate(bundle);
+    private void handleRemotePushNotification(Application context, Bundle bundle) {
+        Log.d(LOG_TAG, "Handle Remote Push Notification: " + bundle);
+
+        RNBackendlessPushNotificationTemplate template = getTemplate(context, bundle);
+
+        Log.d(LOG_TAG, "Push notification template: " + template);
+
         RNBackendlessPushNotificationMessage pushMessage = new RNBackendlessPushNotificationMessage(template, bundle);
+        Bundle pushMessageBundle = pushMessage.toBundle();
+
+        WritableMap notification = null;
 
         if (template.getContentAvailable() == null || template.getContentAvailable() != 1) {
             Log.i(LOG_TAG, "Send Push Notification to Notification Center: " + bundle);
@@ -96,20 +87,22 @@ public class RNBackendlessPushNotificationService extends FirebaseMessagingServi
             provideNotificationHelper(context);
 
             try {
-                pushNotificationHelper.sendToNotificationCentre(pushMessage);
+                pushNotificationHelper.sendToNotificationCentre(pushMessage, pushMessageBundle);
             } catch (Exception e) {
-                Log.e(LOG_TAG, "Failed to send push notification", e);
+                Log.e(LOG_TAG, "Failed to display push notification ", e);
             }
+
+            notification = RNBackendlessPushNotificationMessage.fromBundleToJSObject(pushMessageBundle);
         }
 
-        RNBackendlessModule.sendNotificationEvent(pushMessage.toJSObject());
+        if (notification != null) {
+            RNBackendlessModule.sendNotificationEvent(notification);
+        }
     }
 
-    private void provideNotificationHelper(ReactApplicationContext context) {
+    private void provideNotificationHelper(Application context) {
         if (pushNotificationHelper == null) {
-            Application applicationContext = (Application) context.getApplicationContext();
-
-            pushNotificationHelper = new RNBackendlessPushNotificationHelper(applicationContext);
+            pushNotificationHelper = new RNBackendlessPushNotificationHelper(context);
         }
     }
 

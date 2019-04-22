@@ -134,14 +134,14 @@ public class RNBackendlessPushNotificationTemplate {
 
             HashMap<String, String> customHeadersMap = new HashMap<>();
 
+            for (Iterator<String> it = customHeadersObject.keys(); it.hasNext(); ) {
+                String key = it.next();
+                String value = customHeadersObject.optString(key);
+
+                customHeadersMap.put(key, value);
+            }
+
             if (!customHeadersMap.isEmpty()) {
-                for (Iterator<String> it = customHeadersObject.keys(); it.hasNext(); ) {
-                    String key = it.next();
-                    String value = customHeadersObject.optString(key);
-
-                    customHeadersMap.put(key, value);
-                }
-
                 setCustomHeaders(customHeadersMap);
             }
         }
