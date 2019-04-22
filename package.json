@@ -1,6 +1,6 @@
 {
   "name": "backendless-react-native",
-  "version": "0.0.16-next.6",
+  "version": "0.1.0",
   "description": "",
   "main": "index.js",
   "scripts": {
