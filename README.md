@@ -76,7 +76,7 @@ Backendless.Messaging.addPushNotificationListener(callback)
 Backendless.Messaging.removePushNotificationListener(callback)
 
 function callback(notification:Object){
-// notification.body => "push body"
+// notification.message => "push message"
 // notification.title => "push title"
 // notification.subtitle => "push subtitle" 
 // notification.sound => null
@@ -89,7 +89,7 @@ function callback(notification:Object){
 }
 ````
 
-#### Subscribe on Push Notification Action Response
+#### Subscribe on Push Notification Actions
 
 ````
 
@@ -98,10 +98,10 @@ Backendless.Messaging.removePushNotificationActionListener(callback)
 
 function callback(action:Object){
 
-// action.id => "button id" 
+// action.id => "action id" 
 // action.inlineReply => "some text" 
 
-// action.notification.body => "push body"
+// action.notification.message => "push message"
 // action.notification.title => "push title"
 // action.notification.subtitle => "push subtitle" 
 // action.notification.sound => null
@@ -115,16 +115,16 @@ function callback(action:Object){
     
 ````
   
-#### Get Initial Notification
+#### Get Initial Notification Action
 
 ````
 Backendless.Messaging.getInitialNotificationAction().then(onSuccess).catch(onFail)
 
 function onSuccess(action:Object){
-// action.id => "button id" or "com.apple.UNNotificationDefaultActionIdentifier" 
+// action.id => "action id" 
 // action.inlineReply => "some text" 
 
-// action.notification.body => "push body"
+// action.notification.message => "push message"
 // action.notification.title => "push title"
 // action.notification.subtitle => "push subtitle" 
 // action.notification.sound => null
@@ -138,7 +138,7 @@ function onSuccess(action:Object){
 
 ```` 
 
-#### Get/Set Application Icon Badge Number
+#### Get/Set Application Icon Badge Number (for iOS only)
 
 ````
 Backendless.Messaging.getAppBadgeNumber().then(onGetSuccess).catch(onFail)
@@ -152,25 +152,25 @@ function onSetSuccess(void){
 }
 ````
 
-#### Get Delivered Remote Notifications
+#### Get Delivered Notifications 
 ````
-Backendless.Messaging.getDeliveredNotifications().then(onSuccess).catch(onFail)
+Backendless.Messaging.getNotifications().then(onSuccess).catch(onFail)
 
 function onSuccess(notifications:Array<Object>){
 }
 ````
 
-#### Remove All Delivered Remote Notifications
+#### Cancel All Delivered Notifications
 ````
-Backendless.Messaging.removeAllDeliveredNotifications().then(onSuccess).catch(onFail)
+Backendless.Messaging.cancelAlldNotifications().then(onSuccess).catch(onFail)
 
 function onSuccess(void){
 }
 ````
 
-#### Remove Delivered Remote Notifications
+#### Cancel Delivered Notification
 ````
-Backendless.Messaging.removeDeliveredNotifications(notificationIds:Array<String>).then(onSuccess).catch(onFail)
+Backendless.Messaging.cancelNotification(notification.id).then(onSuccess).catch(onFail)
 
 function onSuccess(void){
 }
