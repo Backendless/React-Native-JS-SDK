@@ -9,7 +9,7 @@ const RNBackendlessEmitter = {
   addListener(event, callback) {
     this.listeners[event] = this.listeners[event] || [];
     this.listeners[event].push({
-      unsubscribe: DeviceEventEmitter.addListener(event, callback),
+      remove: DeviceEventEmitter.addListener(event, callback),
       callback,
     })
   },
