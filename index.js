@@ -86,7 +86,7 @@ Backendless.Messaging.setAppBadgeNumber = value => {
 };
 
 Backendless.Messaging.getNotifications = () => {
-  return RNBackendless.getNotifications().then(voidResolver);
+  return RNBackendless.getNotifications();
 };
 
 Backendless.Messaging.cancelNotification = notificationId => {
