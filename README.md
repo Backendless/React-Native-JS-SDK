@@ -1,3 +1,5 @@
+[![npm version](https://img.shields.io/npm/v/backendless-react-native.svg?style=flat)](https://www.npmjs.com/package/backendless-react-native)
+
 ## Patch for using Backendless JS-SDK inside React Native App.
 
 Actually Backendless JS-SDK is totally adapted for working in React Native applications, 
