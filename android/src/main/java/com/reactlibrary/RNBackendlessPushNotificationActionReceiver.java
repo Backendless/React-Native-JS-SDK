@@ -35,6 +35,7 @@ public class RNBackendlessPushNotificationActionReceiver extends BroadcastReceiv
 
         if (startIntent != null) {
             startIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startIntent.putExtra("action", actionBundle);
 
             context.startActivity(startIntent);
