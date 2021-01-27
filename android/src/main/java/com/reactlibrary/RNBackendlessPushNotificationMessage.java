@@ -35,10 +35,13 @@ class RNBackendlessPushNotificationMessage {
         this.template = template;
 
         if (template.getCustomHeaders() != null && !template.getCustomHeaders().isEmpty()) {
-            customHeaders = template.getCustomHeaders();
 
-            for (Map.Entry<String, String> header : customHeaders.entrySet()) {
-                contentBundle.putString(header.getKey(), header.getValue());
+            for (Map.Entry<String, String> header : template.getCustomHeaders().entrySet()) {
+                String key = header.getKey();
+                String value = bundle.containsKey(key) ? bundle.getString(key) : header.getValue();
+
+                customHeaders.put(key, value);
+                contentBundle.putString(key, value);
             }
         }
 
