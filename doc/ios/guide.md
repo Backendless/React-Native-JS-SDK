@@ -18,12 +18,6 @@ Specify `Bundle identifier` must be the same as in your certificate
  
 ![img](./bundle-identifier.png)
 
-And `RNBackendless` native module into your project’s libraries 
-![img](./link-binary-library.png)
-
-And `RNBackendless` to Build Phases for main target
-![img](./add-binary-library.png)
-
 Enable `Push Notifications` compatibility
 ![img](./enable-push-notifications-compatibility.png)
 
