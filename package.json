@@ -1,7 +1,8 @@
 {
   "name": "backendless-react-native",
   "version": "0.1.6",
-  "description": "",
+  "description": "Backendless React Native",
+  "homepage": "https://github.com/Backendless/React-Native-JS-SDK",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

@@ -23,11 +23,6 @@ __Additional Backendless features__:
 npm i backendless backendless-react-native -S
 ````
 
-#### Link Native Modules
-````bash
-react-native link
-````
-
 #### Setup Native projects
 - [for iOS](./doc/ios/guide.md)
 - [for Android](./doc/android/guide.md)
