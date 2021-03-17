@@ -1,6 +1,6 @@
 {
   "name": "backendless-react-native",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Backendless React Native",
   "homepage": "https://github.com/Backendless/React-Native-JS-SDK",
   "main": "index.js",
@@ -26,7 +26,7 @@
   "author": "info@backendless.com",
   "license": "ISC",
   "peerDependencies": {
-    "react-native": "^0.47.0",
+    "react-native": "^0.60.0",
     "backendless": ">=6.0.0"
   },
   "rnpm": {
