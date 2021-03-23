@@ -2,24 +2,17 @@
 In order to get Push Notifications working in Android applications, 
 you should use Firebase Cloud Messaging (FCM).
 
-- create a new Firebase App.
+- Go to Firebase Console: https://console.firebase.google.com/
 
-- configure your Firebase app for Android
+- create a new (or choose the existing) Firebase Project.
+
+- Add new Android app:
 ![img](./image-1.png)
 
-- specify your “Android package name”. You can find your package name in manifest file by the next path:  /{YOUR_APP_NAME}/android/app/src/main/AndroidManifest.xml
-![img](./image-2.png)
+- Then follow the instructions
 
-- download generated “google-services.json” and put it into your project by the next path: /{YOUR_APP_NAME}/android/app/google-services.json
 
-- add two lines as shown on the screenshot:
-![img](./image-3.png)
- **NOTE**: line “implementation ‘com.google.firebase:firebase-core:16.0.1‘” is unnecessary
-
-- At the end, you should have 2 modified files and one new file; make sure you have the same as on the screenshot below:
-![img](./image-4.png) 
-
-- copy “Server key” from Firebase app and paste the key into Backendless.
+- After completion go to Project Settings -> Cloud Messaging, copy “Server key” and paste it into Backendless:
 ![img](./image-5.png) 
 ![img](./image-6.png) 
 
