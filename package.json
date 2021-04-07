@@ -1,6 +1,6 @@
 {
   "name": "backendless-react-native",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Backendless React Native",
   "homepage": "https://github.com/Backendless/React-Native-JS-SDK",
   "main": "index.js",
